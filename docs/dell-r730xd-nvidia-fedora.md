@@ -3,7 +3,7 @@
 ```
 ╔══════════════════════════════════════════════════════════════════════════╗
 ║  Dell PowerEdge R730xd  ·  PERC H730 RAID6  ·  Fedora  ·  Secure Boot  ║
-║  4 Monitors  ·  3× DisplayPort  ·  HDMI→NAD AVR  ·  Daily Driver       ║
+║  4 Monitors  ·  DP1 HDMI2 DP3 DP4  ·  HDMI→NAD AVR  ·  Daily Driver    ║
 ╚══════════════════════════════════════════════════════════════════════════╝
 ```
 
@@ -683,28 +683,28 @@ Monitor 1  Monitor 2  Monitor 3                                   │
 ### Display Cabling — Option B: 3× DisplayPort + Native HDMI GPU (this build)
 
 This build uses a GPU with **3× DisplayPort + 1× native HDMI**, in physical
-port order **DP — HDMI — DP — DP** left to right. The HDMI port goes directly
-to the NAD AVR — no adapter, no conversion.
+port order **DP 1 — HDMI 2 — DP 3 — DP 4** left to right. Port 2 (HDMI) goes
+directly to the NAD AVR — no adapter, no conversion.
 
 **Cabling:**
 
 ```
-┌─────────────────────────────────────────────┐
-│  GPU  [DP 1] [HDMI] [DP 2] [DP 3]           │
-└───│──────│──────│──────│───────────────────┘
-    │      │      │      │
-    ▼      │      ▼      ▼
-Monitor 1  │  Monitor 2  Monitor 3
-  (DP)     │    (DP)       (DP)
-           │
-           ▼
-      NAD AVR (HDMI in)
-           │
-      NAD AVR (HDMI out)
-           │
-           ▼
-       Monitor 4
-        (HDMI)
+┌──────────────────────────────────────────────┐
+│  GPU  [DP 1] [HDMI 2] [DP 3] [DP 4]          │
+└───│───────│────────│─────│──────────────────┘
+    │       │        │     │
+    ▼       │        ▼     ▼
+Monitor 1   │    Monitor 3  Monitor 4
+  (DP 1)    │     (DP 3)    (DP 4)
+            │
+            ▼
+       NAD AVR (HDMI in)
+            │
+       NAD AVR (HDMI out)
+            │
+            ▼
+        Monitor 2
+        (HDMI 2)
 ```
 
 The native HDMI port carries video and audio directly to the AVR, which passes
