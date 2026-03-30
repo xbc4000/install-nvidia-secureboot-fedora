@@ -1229,8 +1229,22 @@ ping <IDRAC_IP>
 
 ## PERC RAID Monitoring Alongside NVIDIA
 
-Keep an eye on the RAID array health, especially after kernel updates that
-trigger `akmod` rebuilds (disk I/O heavy):
+The PERC H730 presents your RAID6 array as a single block device — the OS and
+NVIDIA driver have no RAID awareness whatsoever. `megaraid_sas` and the NVIDIA
+kernel module are completely independent; one cannot affect the other.
+
+`akmod` rebuilds are **CPU-heavy, not disk I/O heavy** — they compile the kernel
+module in-memory. They have no meaningful interaction with RAID health.
+
+`perccli` queries are lightweight read-only operations with negligible overhead.
+They will not stress the array or interfere with NVIDIA.
+
+The real reason to check RAID health regularly: **pre-existing borderline-failing
+disks get exposed by any sustained I/O** — whether that's a game load, a VM
+migration, or a full system backup. Make it a habit before any major system
+change, not just after kernel updates.
+
+Check RAID health:
 
 ```bash
 # Install perccli if not already done
