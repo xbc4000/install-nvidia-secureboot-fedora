@@ -631,10 +631,10 @@ The installer sets `fbdev=0` during CLI mode installation to avoid framebuffer
 conflicts. Before rebooting to graphical mode, switch it back:
 
 ```bash
-## Check current fbdev setting
+# Check current fbdev setting
 cat /etc/modprobe.d/nvidia.conf | grep fbdev
 
-## If fbdev=0 is present, change to fbdev=1 for graphical mode
+# If fbdev=0 is present, change to fbdev=1 for graphical mode
 sudo sed -i 's/fbdev=0/fbdev=1/g' /etc/modprobe.d/nvidia.conf
 ```
 
@@ -644,18 +644,18 @@ To ensure future kernel updates compile correctly, add the compiler flag
 permanently to the DKMS config:
 
 ```bash
-## Find your NVIDIA driver version
+# Find your NVIDIA driver version
 ls -la /usr/src/ | grep nvidia
 
-## Example: /usr/src/nvidia-580.119.02/
-## Edit the dkms.conf file and update the MAKE line
+# Example: /usr/src/nvidia-580.119.02/
+# Edit the dkms.conf file and update the MAKE line
 sudo nano /usr/src/nvidia-580.119.02/dkms.conf
 
-## Find the line starting with MAKE[0]= and modify it to include CC flag
-## Change from:
-## MAKE[0]="'make' -j16 NV_EXCLUDE_BUILD_MODULES='' KERNEL_UNAME=${kernelver} modules"
-## To:
-## MAKE[0]="CC='gcc -std=gnu17' 'make' -j16 NV_EXCLUDE_BUILD_MODULES='' KERNEL_UNAME=${kernelver} modules"
+# Find the line starting with MAKE[0]= and modify it to include CC flag
+# Change from:
+# MAKE[0]="'make' -j16 NV_EXCLUDE_BUILD_MODULES='' KERNEL_UNAME=${kernelver} modules"
+# To:
+# MAKE[0]="CC='gcc -std=gnu17' 'make' -j16 NV_EXCLUDE_BUILD_MODULES='' KERNEL_UNAME=${kernelver} modules"
 ```
 
 ### Re-enable GUI and Reboot

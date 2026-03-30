@@ -915,9 +915,9 @@ GNOME saves this automatically.
 
 ### HDMI Audio Through the NAD AVR
 
-With the 4th output going GPU → DP-to-HDMI adapter → NAD AVR → monitor,
-audio follows the HDMI signal to the AVR. The AVR processes it and outputs
-to your speakers/monitor.
+With the HDMI output going GPU → NAD AVR → monitor (Option B: native HDMI
+port, no adapter), audio follows the HDMI signal to the AVR. The AVR
+processes it and outputs to your speakers/monitor.
 
 **How audio works on this chain:**
 
@@ -1378,8 +1378,9 @@ sudo reboot
 
 ### PERC H730 Shows Degraded After Driver Install
 
-The NVIDIA akmod build is CPU and I/O intensive. In rare cases on degraded
-arrays, this can expose pre-existing disk issues. Check:
+akmod builds are CPU-intensive — they don't generate significant disk I/O.
+However, if your array was already in a borderline state, any sustained
+system activity can expose pre-existing disk issues. Check:
 
 ```bash
 sudo perccli /c0/vall show
