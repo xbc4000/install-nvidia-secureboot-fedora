@@ -3,7 +3,7 @@
 ```
 ╔══════════════════════════════════════════════════════════════════════════╗
 ║  Dell PowerEdge R730xd  ·  PERC H730 RAID6  ·  Fedora  ·  Secure Boot  ║
-║  NVIDIA GPU  ·  iDRAC Fan Fix  ·  MOK Enrollment  ·  akmod             ║
+║  4 Monitors  ·  3× DisplayPort  ·  HDMI→NAD AVR  ·  Daily Driver       ║
 ╚══════════════════════════════════════════════════════════════════════════╝
 ```
 
@@ -12,10 +12,13 @@
 ![Fedora](https://img.shields.io/badge/Fedora-43%2B-blue?logo=fedora)
 ![NVIDIA](https://img.shields.io/badge/NVIDIA-GPU-76B900?logo=nvidia)
 ![Secure Boot](https://img.shields.io/badge/Secure%20Boot-MOK%20Enrolled-success)
+![Displays](https://img.shields.io/badge/Displays-4×%20monitors-informational)
 
 This guide covers everything specific to running an NVIDIA GPU on a
 **Dell PowerEdge R730xd** with **PERC H730 RAID6**, **Fedora Linux**, and
-**Secure Boot** enabled. It assumes you've already read the main
+**Secure Boot** enabled — used as a daily personal machine with **4 monitors**
+(3× DisplayPort + 1× HDMI through a NAD AV receiver), gaming, and a full
+desktop environment. It assumes you've already read the main
 [NVIDIA driver install guide](install-nvidia-secureboot-fedora.md) and
 focuses on server-specific differences, hardware quirks, and the things
 that will bite you if you don't know about them.
@@ -47,6 +50,16 @@ that will bite you if you don't know about them.
   - [Akmod Build on a Server](#akmod-build-on-a-server)
 - [Enable nvidia-persistenced](#enable-nvidia-persistenced)
 - [NVIDIA Power Management on a Server](#nvidia-power-management-on-a-server)
+- [Daily Driver Setup — 4 Monitors + Gaming](#daily-driver-setup--4-monitors--gaming)
+  - [GPU Selection for 4 Displays](#gpu-selection-for-4-displays)
+  - [Display Cabling — 3× DisplayPort + HDMI via NAD AVR](#display-cabling--3-displayport--hdmi-via-nad-avr)
+  - [NAD AVR HDMI Chain — EDID and Resolution](#nad-avr-hdmi-chain--edid-and-resolution)
+  - [NVIDIA as Primary GPU with No iGPU on Wayland](#nvidia-as-primary-gpu-with-no-igpu-on-wayland)
+  - [4-Monitor Layout Configuration](#4-monitor-layout-configuration)
+  - [HDMI Audio Through the NAD AVR](#hdmi-audio-through-the-nad-avr)
+  - [Gaming on Server Hardware](#gaming-on-server-hardware)
+  - [CPU Governor for Gaming](#cpu-governor-for-gaming)
+  - [Server Fan Noise During Gaming](#server-fan-noise-during-gaming)
 - [Verify Everything Works](#verify-everything-works)
 - [PERC RAID Monitoring Alongside NVIDIA](#perc-raid-monitoring-alongside-nvidia)
 - [Troubleshooting R730xd-Specific Issues](#troubleshooting-r730xd-specific-issues)
@@ -63,20 +76,23 @@ configuration that the R730 has in exchange for more drive bays. That's the
 tradeoff. However, the system board still has PCIe slots and community members
 run GPUs on it regularly.
 
-| GPU Type | Status | Notes |
-|----------|--------|-------|
-| NVIDIA Quadro P2000 / P620 | Works | Low-profile, bus-powered, no fan issue |
-| NVIDIA T400 / T1000 | Works | Low-profile, bus-powered |
-| NVIDIA A2 | Works | PCIe-only power, server-grade, no fan alarm |
-| NVIDIA RTX 3xxx/4xxx (consumer) | Problematic | No GOP support in older BIOS, fan alarm, unsupported |
-| NVIDIA Tesla P100 / V100 | Works with power cable | Requires 8-pin PCIe power from riser 3 |
-| NVIDIA A30 / A100 | Not tested on R730xd | Designed for newer platforms |
+| GPU Type | Outputs | Status | Notes |
+|----------|---------|--------|-------|
+| NVIDIA RTX A4000 | 4× DP 1.4 | Best pick | Single-slot, 140W (6-pin), 16GB GDDR6, strong gaming |
+| NVIDIA RTX A2000 12GB | 4× mDP 1.4 | Excellent | Single-slot, 70W bus-powered, 4 mini-DP outputs |
+| NVIDIA Quadro P4000 | 4× DP 1.4 | Good | Single-slot, 105W (6-pin), older but proven |
+| NVIDIA Quadro P2000 | 4× DP 1.4 | Good | Bus-powered 75W, no fan alarm, weaker gaming |
+| NVIDIA T400 / T1000 | 4× mDP | Works | Low-profile, bus-powered, very weak gaming |
+| NVIDIA A2 | 1× HDMI + 4× DP | Works | PCIe-only power, server-grade |
+| NVIDIA RTX 3xxx/4xxx (consumer) | varies | Problematic | No GOP in R730xd BIOS, fan alarm, unsupported |
+| NVIDIA Tesla P100 / V100 | no display out | Compute only | No display outputs — not useful for desktop use |
 
 > [!TIP]
-> **Best picks for R730xd:** Low-profile, passively cooled or single-fan,
-> bus-powered cards like the **P2000**, **T400**, or **A2** cause the least
-> trouble. They draw power entirely from the PCIe bus, require no extra power
-> connectors, and keep the iDRAC thermal alarm quiet.
+> **Best picks for 4-monitor gaming on R730xd:** The **RTX A4000** is the
+> strongest single-slot card that fits, with 4× DP 1.4, 16GB VRAM, and real
+> gaming performance. The **RTX A2000 12GB** is a great bus-powered alternative
+> if you want to avoid the 6-pin connector. Both are server/workstation cards
+> with proper GOP firmware — no black screen at POST, no fan alarm from iDRAC.
 
 > [!IMPORTANT]
 > Consumer RTX cards (3070, 3090, 4090, etc.) are not supported. The R730xd's
@@ -596,6 +612,533 @@ nvidia-smi --query-accounted-apps=gpu_name,time,gpu_util --format=csv
 
 ---
 
+## Daily Driver Setup — 4 Monitors + Gaming
+
+This section covers everything specific to using the R730xd as a daily personal
+machine with a full 4-monitor desktop and gaming workloads — not just a headless
+compute box.
+
+---
+
+### GPU Selection for 4 Displays
+
+Your setup needs: **3× DisplayPort + 1× HDMI output simultaneously**.
+
+Most workstation-grade cards that fit the R730xd have **4× DisplayPort** outputs
+but **no native HDMI**. That's fine — DisplayPort carries audio and can drive
+your HDMI AVR chain via a passive or active adapter (more on that below).
+
+**Recommended cards for this exact use case:**
+
+| Card | Outputs | VRAM | Power | Why it's good here |
+|------|---------|------|-------|--------------------|
+| **RTX A4000** | 4× DP 1.4 | 16GB | 140W (6-pin) | Best gaming perf, single-slot, fits R730xd riser 2/3 |
+| **RTX A2000 12GB** | 4× mini-DP 1.4 | 12GB | 70W (bus) | No power cable needed, great all-rounder |
+| **Quadro P4000** | 4× DP 1.4 | 8GB | 105W (6-pin) | Cheaper used, Pascal-era, still capable |
+
+> [!NOTE]
+> The RTX A4000 and A2000 are **Ampere architecture** — same generation as
+> consumer RTX 3000-series but with server-grade firmware, ECC support, and
+> proper GOP for POST display. They work exactly like consumer cards for gaming
+> but don't trigger iDRAC fan alarms.
+
+---
+
+### Display Cabling — 3× DisplayPort + HDMI via NAD AVR
+
+Your 4th monitor runs HDMI → NAD AVR → monitor. Since most of these cards are
+4× DP only, one of your DP outputs needs to convert to HDMI for the AVR chain.
+
+**Cable/adapter setup:**
+
+```
+GPU DP port 1  ──────────────────────────────────►  Monitor 1 (DP)
+GPU DP port 2  ──────────────────────────────────►  Monitor 2 (DP)
+GPU DP port 3  ──────────────────────────────────►  Monitor 3 (DP)
+GPU DP port 4  ──[Active DP→HDMI 2.0 adapter]───►  NAD AVR (HDMI in)
+                                                         │
+                                                    NAD AVR (HDMI out)
+                                                         │
+                                                         ▼
+                                                    Monitor 4 (HDMI)
+```
+
+> [!IMPORTANT]
+> Use an **active** DisplayPort-to-HDMI adapter, not a passive one. Passive
+> adapters only work with dual-mode DisplayPort ("DP++") sources and may not
+> carry audio. Active adapters contain a conversion chip and are fully reliable
+> for this use case. NVIDIA recommends active adapters for DP-to-HDMI when
+> audio is needed. The RTX A4000 ships with one in the box.
+
+---
+
+### NAD AVR HDMI Chain — EDID and Resolution
+
+Running HDMI through an AV receiver introduces an **EDID chain** — the GPU
+reads the EDID (monitor capability data) from the AVR, not from your monitor.
+This is the most common cause of wrong resolution or refresh rate on the 4th
+display.
+
+**How it works:**
+
+The NAD AVR sits between the GPU and the monitor. When Linux enumerates displays,
+the GPU asks "what can you display?" and the AVR answers — using either its own
+EDID or (if EDID passthrough is enabled) the downstream monitor's EDID.
+
+**Fix 1 — Enable EDID passthrough on the NAD AVR:**
+
+Most NAD AVRs support EDID passthrough. In your AVR menu, look for:
+- **HDMI Settings → EDID Mode → Pass-Through** or **Monitor**
+- This tells the AVR to report the monitor's capabilities instead of its own
+
+**Fix 2 — Force a resolution if EDID passthrough doesn't work:**
+
+Create a custom EDID rule in an Xorg config snippet. This works on both
+Wayland (via xrandr) and X11:
+
+```bash
+# Check what the GPU thinks the display supports
+xrandr --verbose 2>/dev/null | grep -A20 "HDMI\|DP-4"
+
+# Force specific mode if auto-detection is wrong
+xrandr --output HDMI-1 --mode 1920x1080 --rate 60
+
+# Or create a persistent custom mode
+xrandr --newmode "1920x1080_60" 148.50 1920 2008 2052 2200 1080 1084 1089 1125 -hsync +vsync
+xrandr --addmode HDMI-1 "1920x1080_60"
+xrandr --output HDMI-1 --mode "1920x1080_60"
+```
+
+**Fix 3 — Force EDID from file (nuclear option):**
+
+If the AVR reports wrong capabilities and passthrough isn't working, you can
+override the EDID entirely. Extract your monitor's real EDID and tell the
+kernel to use it:
+
+```bash
+# Read current EDID (run after display is connected)
+sudo cat /sys/class/drm/card0-HDMI-A-1/edid > /usr/lib/firmware/edid/monitor4.bin
+# Or use read-edid tools:
+sudo dnf install read-edid
+sudo get-edid | sudo tee /usr/lib/firmware/edid/monitor4.bin
+
+# Tell the kernel to use it — add to GRUB_CMDLINE_LINUX in /etc/default/grub:
+# drm.edid_firmware=HDMI-A-1:edid/monitor4.bin
+
+sudo grubby --update-kernel=ALL --args='drm.edid_firmware=HDMI-A-1:edid/monitor4.bin'
+sudo reboot
+```
+
+> [!TIP]
+> The HDMI output name (`HDMI-A-1`, `HDMI-1`, etc.) varies. Find yours with
+> `xrandr` or `cat /sys/class/drm/*/status`.
+
+---
+
+### NVIDIA as Primary GPU with No iGPU on Wayland
+
+The R730xd has **no integrated graphics** — only the discrete NVIDIA GPU.
+This is actually simpler than hybrid setups, but it requires a specific
+configuration for Wayland to use the NVIDIA card properly.
+
+**Step 1 — Confirm KMS is enabled** (should already be set from RPM Fusion):
+
+```bash
+cat /proc/cmdline | grep nvidia-drm
+# nvidia-drm.modeset=1 must be present
+```
+
+If missing:
+
+```bash
+sudo grubby --update-kernel=ALL --args='nvidia-drm.modeset=1'
+sudo reboot
+```
+
+**Step 2 — Configure GDM to allow Wayland with NVIDIA:**
+
+On Fedora 43, GDM may still resist Wayland on NVIDIA via a udev rule. Check:
+
+```bash
+cat /etc/udev/rules.d/61-gdm.rules 2>/dev/null || \
+  cat /usr/lib/udev/rules.d/61-gdm.rules | grep -i nvidia
+```
+
+If there's a rule that forces X11 for NVIDIA:
+
+```bash
+sudo cp /usr/lib/udev/rules.d/61-gdm.rules /etc/udev/rules.d/61-gdm.rules
+# Comment out the line that forces Xorg for NVIDIA:
+sudo sed -i 's/^DRIVER=="nvidia".*WaylandEnable=false/#&/' /etc/udev/rules.d/61-gdm.rules
+```
+
+**Step 3 — Set WaylandEnable in GDM config:**
+
+```bash
+sudo nano /etc/gdm/custom.conf
+```
+
+Ensure the `[daemon]` section contains:
+
+```ini
+[daemon]
+WaylandEnable=true
+```
+
+> [!NOTE]
+> On Fedora 43 with RPM Fusion drivers, Wayland with NVIDIA should work
+> out of the box on a system with no iGPU. If you're still landing on an
+> X11 session, check the GDM udev rule above — that's almost always the cause.
+
+**Step 4 — For KDE Plasma:**
+
+KDE Plasma on Wayland with NVIDIA works well on Fedora 43. Make sure:
+
+```bash
+# KMS must be on
+sudo grubby --update-kernel=ALL --args='nvidia-drm.modeset=1'
+
+# Check Plasma is running on Wayland after login
+echo $XDG_SESSION_TYPE   # should print: wayland
+```
+
+> [!TIP]
+> For a gaming desktop on a server, **KDE Plasma on Wayland** is the
+> recommended combination. It has better multi-monitor support than GNOME,
+> offers native X11 session fallback if you need it, and handles mixed
+> refresh rates across 4 monitors more gracefully.
+
+---
+
+### 4-Monitor Layout Configuration
+
+With 4 monitors and no iGPU, all display management goes through the NVIDIA
+driver directly.
+
+**Check all 4 displays are detected:**
+
+```bash
+xrandr --query
+# or on Wayland:
+kscreen-doctor -o   # KDE
+gnome-randr         # GNOME (install with: sudo dnf install gnome-randr)
+```
+
+**Identify your outputs:**
+
+```bash
+# List connected outputs
+xrandr | grep " connected"
+```
+
+Example output for 4 monitors:
+
+```
+DP-1 connected 2560x1440+0+0 (normal left inverted right x axis y axis) 597mm x 336mm
+DP-2 connected 2560x1440+2560+0 ...
+DP-3 connected 1920x1080+5120+0 ...
+HDMI-1 connected 1920x1080+7040+0 ...
+```
+
+**Set persistent layout with xrandr (X11):**
+
+Add to `~/.config/autostart/` or your display manager session:
+
+```bash
+xrandr \
+  --output DP-1   --mode 2560x1440 --rate 144 --pos 0x0 --primary \
+  --output DP-2   --mode 2560x1440 --rate 144 --pos 2560x0 \
+  --output DP-3   --mode 1920x1080 --rate 60  --pos 5120x0 \
+  --output HDMI-1 --mode 1920x1080 --rate 60  --pos 7040x0
+```
+
+Adjust positions, resolutions, and refresh rates to match your actual setup.
+
+**KDE Plasma (Wayland) — persistent via kscreen:**
+
+KDE saves display configuration automatically after you set it in
+**System Settings → Display and Monitor**. The config persists across reboots
+and is stored in `~/.local/share/kscreen/`.
+
+**GNOME (Wayland):**
+
+Use **Settings → Displays** to set arrangement, resolutions, and refresh rates.
+GNOME saves this automatically.
+
+> [!NOTE]
+> Mixed refresh rates (e.g. 144Hz DP monitors + 60Hz HDMI monitor through AVR)
+> work fine on Wayland with NVIDIA. On X11, mixed refresh rates cause all
+> monitors to sync to the lowest rate — another reason to use Wayland.
+
+---
+
+### HDMI Audio Through the NAD AVR
+
+With the 4th output going GPU → DP-to-HDMI adapter → NAD AVR → monitor,
+audio follows the HDMI signal to the AVR. The AVR processes it and outputs
+to your speakers/monitor.
+
+**How audio works on this chain:**
+
+The GPU exposes HDMI audio as a separate ALSA device. PipeWire (Fedora's
+audio stack) wraps it. You select it as your output device and the audio
+signal travels through the HDMI cable to the AVR, which decodes or passes
+it to your speakers.
+
+**Step 1 — Verify the NVIDIA HDMI audio device is detected:**
+
+```bash
+# List all audio devices at ALSA level
+aplay -l | grep -i nvidia
+
+# List PipeWire sinks
+pactl list sinks short
+```
+
+You should see entries like:
+```
+alsa_output.pci-0000_03_00.0.hdmi-stereo-extra1
+```
+
+**Step 2 — If the HDMI audio device doesn't appear, enable it in WirePlumber:**
+
+```bash
+mkdir -p ~/.config/wireplumber/wireplumber.conf.d/
+
+cat > ~/.config/wireplumber/wireplumber.conf.d/hdmi-audio.conf << 'EOF'
+monitor.alsa.rules = [
+  {
+    matches = [
+      { node.name = "~alsa_output.*hdmi*" }
+    ]
+    actions = {
+      update-props = {
+        node.enabled = true
+      }
+    }
+  }
+]
+EOF
+
+systemctl --user restart wireplumber pipewire
+```
+
+**Step 3 — Set the HDMI output as default or route per-app:**
+
+```bash
+# List available sinks with full names
+pactl list sinks | grep -E "Name:|Description:"
+
+# Set HDMI as default sink (replace with your actual sink name)
+pactl set-default-sink alsa_output.pci-0000_03_00.0.hdmi-stereo-extra1
+```
+
+Or in GUI: **KDE System Settings → Audio → select the NVIDIA HDMI device** as
+your default output, or use the system tray audio switcher.
+
+**Step 4 — Test audio is reaching the AVR:**
+
+```bash
+# Play a test tone through the HDMI sink
+paplay --device=alsa_output.pci-0000_03_00.0.hdmi-stereo-extra1 /usr/share/sounds/freedesktop/stereo/bell.oga
+```
+
+You should hear it through the AVR/speakers, not your computer.
+
+**Step 5 — Audio format and channels:**
+
+The NAD AVR can decode multichannel audio. For stereo desktop audio, the
+default PCM stereo output works perfectly. For surround sound from games or
+video, configure the sink profile:
+
+```bash
+# List available profiles for the NVIDIA audio card
+pactl list cards | grep -A30 "nvidia\|NVIDIA"
+
+# Set surround profile if available
+pactl set-card-profile <card-name> output:hdmi-surround71+input:analog-stereo
+```
+
+> [!TIP]
+> For the best experience with the NAD AVR: use **PCM stereo** for desktop
+> audio (games, music, desktop sounds) — it just works and the AVR decodes
+> it cleanly. For movies with Dolby/DTS, use a media player like **MPV** or
+> **VLC** configured with HDMI passthrough. Bitstream passthrough on Linux
+> via PipeWire is still unreliable as of early 2026; ALSA passthrough in MPV
+> works much better for that specific use case.
+
+**MPV HDMI audio passthrough config** (`~/.config/mpv/mpv.conf`):
+
+```ini
+audio-device=alsa/hdmi:CARD=NVidia,DEV=0
+audio-passthrough-codecs=ac3,eac3,dts,dts-hd,truehd
+```
+
+---
+
+### Gaming on Server Hardware
+
+The R730xd with an RTX A4000 or RTX A2000 is a fully capable gaming machine.
+There are a few server-specific things to know.
+
+**What's different from a desktop:**
+
+| Aspect | Desktop | R730xd |
+|--------|---------|--------|
+| CPU | Single-socket, high clock | Dual Xeon, high core count, lower per-core clock |
+| RAM | DDR4/DDR5 fast | DDR4 RDIMM, slightly higher latency |
+| Cooling | Quiet by default | Loud — fans ramp hard under load (fix below) |
+| PCIe | 4.0 / 5.0 | 3.0 — still fine for gaming GPUs |
+| Suspend/hibernate | Works | Works with nvidia suspend services |
+
+The Xeon E5 v3/v4 CPUs in the R730xd have lower single-core boost clocks than
+modern desktop CPUs. Most games don't care — they're GPU-limited — but
+CPU-bound games (some strategy games, heavily modded Skyrim, etc.) may show
+lower FPS than a modern gaming desktop.
+
+**Install gaming essentials:**
+
+```bash
+# Steam
+sudo dnf install steam
+
+# Lutris (multi-platform game launcher)
+sudo dnf install lutris
+
+# Wine (Windows games)
+sudo dnf install wine winetricks
+
+# GameMode — auto-applies performance tweaks while gaming
+sudo dnf install gamemode
+# Launch games with: gamemoderun %command%
+
+# MangoHud — in-game performance overlay
+sudo dnf install mangohud
+# Launch with: mangohud %command%
+
+# Proton/Steam compatibility (via Steam settings)
+# Steam → Settings → Compatibility → Enable Steam Play for all titles
+```
+
+**Verify GPU is being used by Steam:**
+
+```bash
+# Check NVIDIA GPU utilization while a game is running
+watch -n1 'nvidia-smi --query-gpu=utilization.gpu,temperature.gpu,power.draw --format=csv,noheader'
+```
+
+**Vulkan support check:**
+
+```bash
+sudo dnf install vulkan-tools
+vulkaninfo --summary
+# Should show your NVIDIA GPU as the Vulkan device
+```
+
+---
+
+### CPU Governor for Gaming
+
+The R730xd's BIOS "Performance" profile helps, but Fedora's CPU governor also
+matters. Server kernels often default to `powersave`.
+
+```bash
+# Check current governor on all cores
+cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor | sort -u
+
+# Set performance governor temporarily
+echo performance | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
+
+# Make it persistent across reboots
+sudo dnf install cpupower
+sudo cpupower frequency-set -g performance
+sudo systemctl enable cpupower
+```
+
+Or use `tuned` (already installed on Fedora Server):
+
+```bash
+# Check active profile
+tuned-adm active
+
+# Set to throughput-performance for gaming
+sudo tuned-adm profile throughput-performance
+
+# Or latency-performance for more aggressive tuning
+sudo tuned-adm profile latency-performance
+```
+
+> [!NOTE]
+> `latency-performance` disables C-states and P-states entirely, keeps all
+> cores at max frequency, and reduces CPU latency at the cost of higher idle
+> power. Good for serious gaming sessions; overkill for daily use.
+
+---
+
+### Server Fan Noise During Gaming
+
+Under gaming load, the R730xd will run fans loud — this is expected. The
+thermal algorithm ramps fans based on CPU and ambient temperature, not just
+GPU temperature (which NVIDIA manages separately via its own fan).
+
+The IPMI fan override from the [fan noise section](#the-fan-noise-problem-and-the-fix)
+silences the **idle** fan blast from the unknown GPU. Under actual CPU gaming
+load, fans will still ramp — that's the server doing its job cooling two Xeons.
+
+**If fans are still loud at idle with the IPMI fix applied:**
+
+```bash
+# Check current fan speeds
+ipmitool -I lanplus -H <IDRAC_IP> -U <USER> -P <PASS> sdr type Fan
+
+# Check CPU temperatures (fans ramp if CPUs are hot)
+ipmitool -I lanplus -H <IDRAC_IP> -U <USER> -P <PASS> sdr type Temperature
+
+# Check if IPMI fix is still active (survives iDRAC resets)
+ipmitool -I lanplus -H <IDRAC_IP> -U <USER> -P <PASS> \
+  raw 0x30 0xce 0x01 0x16 0x05 0x00 0x00 0x00
+# Response ending in 05 00 01 00 00 = disabled (quiet) ✓
+# Response ending in 05 00 00 00 00 = enabled (loud) ✗ — re-run the fix
+```
+
+> [!TIP]
+> The IPMI fan override resets on iDRAC restart or AC power cycle. If the
+> server gets power-cycled, re-apply the override. A simple systemd oneshot
+> service can do this automatically on boot — see the iDRAC reference section.
+
+**Systemd service to auto-apply fan fix on boot:**
+
+```bash
+sudo tee /etc/systemd/system/idrac-fan-fix.service << 'EOF'
+[Unit]
+Description=Disable iDRAC third-party PCIe fan override
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/ipmitool -I lanplus -H IDRAC_IP -U IDRAC_USER -P IDRAC_PASS \
+  raw 0x30 0xce 0x00 0x16 0x05 0x00 0x00 0x00 0x05 0x00 0x01 0x00 0x00
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# Replace IDRAC_IP, IDRAC_USER, IDRAC_PASS with real values
+sudo nano /etc/systemd/system/idrac-fan-fix.service
+
+sudo systemctl daemon-reload
+sudo systemctl enable idrac-fan-fix.service
+```
+
+> [!WARNING]
+> This service embeds your iDRAC credentials in a systemd unit file.
+> Set restrictive permissions: `sudo chmod 600 /etc/systemd/system/idrac-fan-fix.service`
+> and ensure the file is owned by root.
+
+---
+
 ## Verify Everything Works
 
 ```bash
@@ -828,6 +1371,14 @@ Before you reboot into production:
 - [ ] Rebooted and confirmed `nvidia-smi` shows GPU
 - [ ] `nvidia-persistenced` enabled and running
 - [ ] IPMI fan override disabled (quiet fans)
+- [ ] `idrac-fan-fix.service` enabled (auto-applies on boot)
+- [ ] All 4 monitors detected (`xrandr` or `kscreen-doctor -o`)
+- [ ] HDMI monitor (via NAD AVR) correct resolution — check EDID passthrough
+- [ ] HDMI audio reaching NAD AVR (`pactl list sinks short`)
+- [ ] Wayland session confirmed (`echo $XDG_SESSION_TYPE` → `wayland`)
+- [ ] `nvidia-drm.modeset=1` in kernel cmdline
+- [ ] CPU governor set to `performance` or `tuned` profile active
+- [ ] Steam/Lutris installed, Vulkan working (`vulkaninfo --summary`)
 - [ ] RAID still Optimal after reboot (`sudo perccli /c0 show`)
 - [ ] SELinux still Enforcing (`getenforce`)
 
