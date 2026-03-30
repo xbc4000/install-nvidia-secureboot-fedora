@@ -2,8 +2,8 @@
 
 ```
 ╔══════════════════════════════════════════════════════════════════════════╗
-║   NVIDIA  ×  Fedora   —   RPM Fusion · CUDA Repo · Runfile              ║
-║   Secure Boot MOK  ·  akmod  ·  Wayland  ·  PRIME  ·  CUDA             ║
+║   NVIDIA  ×  Fedora   —   RPM Fusion · CUDA Repo · Runfile               ║
+║   Secure Boot MOK  ·  akmod  ·  Wayland  ·  PRIME  ·  CUDA               ║
 ╚══════════════════════════════════════════════════════════════════════════╝
 ```
 

@@ -2,8 +2,8 @@
 
 ```
 ╔══════════════════════════════════════════════════════════════════════════╗
-║  Dell PowerEdge R730xd  ·  PERC H730 RAID6  ·  Fedora  ·  Secure Boot  ║
-║  4 Monitors  ·  DP1 HDMI2 DP3 DP4  ·  HDMI→NAD AVR  ·  Daily Driver    ║
+║  Dell PowerEdge R730xd  ·  PERC H730 RAID6  ·  Fedora  ·  Secure Boot    ║
+║  4 Monitors  ·  DP1 HDMI2 DP3 DP4  ·  HDMI→NAD AVR  ·  Daily Driver      ║
 ╚══════════════════════════════════════════════════════════════════════════╝
 ```
 

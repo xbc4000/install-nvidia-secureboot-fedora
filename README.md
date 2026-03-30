@@ -2,7 +2,7 @@
 
 ```
 ╔══════════════════════════════════════════════════════════════════════╗
-║  Fedora  ·  RPM Fusion  ·  akmod  ·  Secure Boot MOK  ·  Wayland    ║
+║  Fedora  ·  RPM Fusion  ·  akmod  ·  Secure Boot MOK  ·  Wayland     ║
 ║  Three install methods  ·  Full troubleshooting  ·  CUDA ready       ║
 ╚══════════════════════════════════════════════════════════════════════╝
 ```
@@ -100,7 +100,7 @@ sudo mokutil --import /etc/pki/akmods/certs/public_key.der
 > **MOK screen tip:** It almost always uses US QWERTY layout regardless
 > of your keyboard locale. Use a simple password you can retype.
 
-Full step-by-step in the [install guide](docs/install-nvidia-secureboot-fedora.md#secure-boot-and-mok-enrollment-on-rpm-fusion).
+Full step-by-step in the [install guide](docs/install-nvidia-secureboot-fedora.md#secure-boot-and-mok-enrollment).
 
 ---
 
