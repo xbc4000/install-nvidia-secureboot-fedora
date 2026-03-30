@@ -627,23 +627,28 @@ can achieve this — pick the section that matches your card.
 >
 > | Connection type | Boot behaviour |
 > |----------------|---------------|
-> | DisplayPort → DisplayPort (DP-DP) | **Black screen** from power-on until the OS login manager loads |
+> | DisplayPort → DisplayPort (DP-DP) | **Black screen** from power-on until OS login manager — even if HDMI is also connected |
 > | HDMI → HDMI | Video works from boot |
 > | DisplayPort → HDMI (active adapter) | Video works from boot |
-> | Mix of HDMI and DP→HDMI | Video works from boot on those outputs |
 >
-> The DP-only black screen is cosmetic — the system still boots normally,
-> you just can't see POST, BIOS, GRUB, or the kernel splash. If you need
-> to access BIOS or GRUB (e.g. for MOK enrollment during driver setup),
-> you must have at least one **HDMI connection** active — either native
-> HDMI from the GPU or a DP→HDMI adapter on one port.
+> **DP-to-DP does not work pre-OS, full stop.** Having an HDMI monitor
+> connected at the same time does not fix the DP outputs — they stay black
+> until the OS login manager loads regardless. HDMI works on its own.
+> DP-DP works only after the OS driver takes over.
+>
+> In practice this means: if your entire setup is DP-to-DP, you boot blind
+> until the login manager appears. If you need to interact with BIOS, GRUB,
+> or the MOK enrollment screen, you must connect a monitor via **HDMI** (native
+> port or DP→HDMI adapter) for that session — HDMI is the only connection that
+> produces pre-OS video on unsupported cards.
 >
 > **The tradeoff:** HDMI has lower maximum bandwidth than DisplayPort 1.4.
 > On high-resolution monitors this forces a choice — a 4K monitor on HDMI 2.0
 > is limited to 4K@60Hz (vs 4K@120Hz+ on DP 1.4), and some very high
 > resolution panels may only be reachable at reduced refresh rates over HDMI.
 > If your monitor is 1440p or 1080p this is a non-issue. If it's 4K@120Hz+,
-> keep that monitor on DisplayPort and put a lower-res display on the HDMI port.
+> keep that monitor on DisplayPort and accept the blind boot, or put a
+> lower-res display on the HDMI port for pre-OS visibility.
 
 ---
 
@@ -1271,24 +1276,21 @@ If nothing appears:
 
 ### Black Screen from Power-On Until Login Manager (DP-Connected Monitors)
 
-This is **expected behaviour** on the R730xd with an unsupported GPU and
-DisplayPort-connected monitors. The BIOS has no GOP driver for the card so it
-produces no output over DP until the OS loads its own NVIDIA driver — at which
-point the login manager appears as normal.
+This is **expected behaviour** on the R730xd with an unsupported GPU. The BIOS
+has no GOP driver for the card, so it produces no output over DP. Key points:
 
-The fix is to have at least one **HDMI output active** during boot:
-- Native HDMI port on the GPU connected to any HDMI display, or
-- An active DP→HDMI adapter on one port connected to an HDMI display
-
-Once the BIOS detects an HDMI-connected display it outputs POST and GRUB there.
-Your DP monitors remain black until the OS loads, but you can at least see
-what's happening and interact with BIOS/GRUB/MOK enrollment when needed.
+- **DP-to-DP outputs stay black until the OS login manager** — no POST, no GRUB,
+  no kernel splash, no MOK screen
+- **Having HDMI connected alongside DP does not fix the DP outputs** — they
+  remain black regardless. HDMI and DP behave independently
+- **HDMI works on its own** — native HDMI or DP→HDMI adapter both produce
+  pre-OS video correctly
 
 > [!NOTE]
-> If all your monitors are DP-connected and you need to reach BIOS or GRUB
-> (for MOK enrollment, boot order changes, etc.), temporarily connect one
-> monitor via HDMI before rebooting. You can switch back to DP-only once
-> driver setup is complete — you just won't have pre-OS video on those screens.
+> If you need to interact with BIOS, GRUB, or the MOK enrollment screen,
+> connect a monitor via HDMI for that session (native port or active DP→HDMI
+> adapter). Your DP monitors will stay black during that process — that's normal.
+> Once the OS loads, all connected displays come up regardless of connection type.
 
 **HDMI bandwidth vs DisplayPort — resolution and refresh rate tradeoff:**
 
