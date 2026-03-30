@@ -78,27 +78,19 @@ run GPUs on it regularly.
 
 | GPU Type | Outputs | Status | Notes |
 |----------|---------|--------|-------|
-| NVIDIA RTX A4000 | 4× DP 1.4 | Best pick | Single-slot, 140W (6-pin), 16GB GDDR6, strong gaming |
-| NVIDIA RTX A2000 12GB | 4× mDP 1.4 | Excellent | Single-slot, 70W bus-powered, 4 mini-DP outputs |
-| NVIDIA Quadro P4000 | 4× DP 1.4 | Good | Single-slot, 105W (6-pin), older but proven |
-| NVIDIA Quadro P2000 | 4× DP 1.4 | Good | Bus-powered 75W, no fan alarm, weaker gaming |
-| NVIDIA T400 / T1000 | 4× mDP | Works | Low-profile, bus-powered, very weak gaming |
-| NVIDIA A2 | 1× HDMI + 4× DP | Works | PCIe-only power, server-grade |
+| GPU in this build | 3× DP + 1× HDMI (DP-HDMI-DP-DP) | In use | Native HDMI → NAD AVR direct, no adapter |
+| NVIDIA RTX A4000 | 4× DP 1.4 | Great alt | Single-slot, 140W (6-pin), 16GB GDDR6, needs DP→HDMI adapter |
+| NVIDIA RTX A2000 12GB | 4× mDP 1.4 | Great alt | Bus-powered 70W, needs active mini-DP→HDMI adapter |
+| NVIDIA Quadro P4000 | 4× DP 1.4 | Good alt | Single-slot, 105W (6-pin), needs DP→HDMI adapter |
+| NVIDIA Quadro P2000 | 4× DP 1.4 | Good alt | Bus-powered 75W, no fan alarm, weaker gaming |
+| NVIDIA T400 / T1000 | 4× mDP | Limited | Low-profile only, very weak gaming |
 | NVIDIA RTX 3xxx/4xxx (consumer) | varies | Problematic | No GOP in R730xd BIOS, fan alarm, unsupported |
-| NVIDIA Tesla P100 / V100 | no display out | Compute only | No display outputs — not useful for desktop use |
+| NVIDIA Tesla P100 / V100 | none | Compute only | No display outputs — useless for desktop |
 
-> [!TIP]
-> **Best picks for 4-monitor gaming on R730xd:** The **RTX A4000** is the
-> strongest single-slot card that fits, with 4× DP 1.4, 16GB VRAM, and real
-> gaming performance. The **RTX A2000 12GB** is a great bus-powered alternative
-> if you want to avoid the 6-pin connector. Both are server/workstation cards
-> with proper GOP firmware — no black screen at POST, no fan alarm from iDRAC.
-
-> [!IMPORTANT]
-> Consumer RTX cards (3070, 3090, 4090, etc.) are not supported. The R730xd's
-> BIOS GOP (Graphics Output Protocol) firmware does not have entries for
-> consumer GPU ROMs. This can cause no POST video output. Server/Quadro cards
-> have GOP support.
+> [!NOTE]
+> Any card with **4× DP only** needs an active DisplayPort-to-HDMI 2.0 adapter
+> for the NAD AVR connection. The GPU in this build has native HDMI so no
+> adapter is required — one less thing to worry about.
 
 ---
 
@@ -622,53 +614,41 @@ compute box.
 
 ### GPU Selection for 4 Displays
 
-Your setup needs: **3× DisplayPort + 1× HDMI output simultaneously**.
-
-Most workstation-grade cards that fit the R730xd have **4× DisplayPort** outputs
-but **no native HDMI**. That's fine — DisplayPort carries audio and can drive
-your HDMI AVR chain via a passive or active adapter (more on that below).
-
-**Recommended cards for this exact use case:**
-
-| Card | Outputs | VRAM | Power | Why it's good here |
-|------|---------|------|-------|--------------------|
-| **RTX A4000** | 4× DP 1.4 | 16GB | 140W (6-pin) | Best gaming perf, single-slot, fits R730xd riser 2/3 |
-| **RTX A2000 12GB** | 4× mini-DP 1.4 | 12GB | 70W (bus) | No power cable needed, great all-rounder |
-| **Quadro P4000** | 4× DP 1.4 | 8GB | 105W (6-pin) | Cheaper used, Pascal-era, still capable |
-
-> [!NOTE]
-> The RTX A4000 and A2000 are **Ampere architecture** — same generation as
-> consumer RTX 3000-series but with server-grade firmware, ECC support, and
-> proper GOP for POST display. They work exactly like consumer cards for gaming
-> but don't trigger iDRAC fan alarms.
+This setup uses a GPU with **3× DisplayPort + 1× native HDMI** outputs,
+in physical port order **DP — HDMI — DP — DP** from left to right. The HDMI
+output goes directly to the NAD AVR — no adapter needed.
 
 ---
 
-### Display Cabling — 3× DisplayPort + HDMI via NAD AVR
+### Display Cabling — 3× DisplayPort + Native HDMI via NAD AVR
 
-Your 4th monitor runs HDMI → NAD AVR → monitor. Since most of these cards are
-4× DP only, one of your DP outputs needs to convert to HDMI for the AVR chain.
+The GPU has native HDMI — no adapter needed. Physical port order left to right:
+**DP — HDMI — DP — DP**.
 
-**Cable/adapter setup:**
+**Cabling:**
 
 ```
-GPU DP port 1  ──────────────────────────────────►  Monitor 1 (DP)
-GPU DP port 2  ──────────────────────────────────►  Monitor 2 (DP)
-GPU DP port 3  ──────────────────────────────────►  Monitor 3 (DP)
-GPU DP port 4  ──[Active DP→HDMI 2.0 adapter]───►  NAD AVR (HDMI in)
-                                                         │
-                                                    NAD AVR (HDMI out)
-                                                         │
-                                                         ▼
-                                                    Monitor 4 (HDMI)
+┌─────────────────────────────────────────────┐
+│  GPU  [DP 1] [HDMI] [DP 2] [DP 3]           │
+└───│──────│──────│──────│───────────────────┘
+    │      │      │      │
+    ▼      │      ▼      ▼
+Monitor 1  │  Monitor 2  Monitor 3
+  (DP)     │    (DP)       (DP)
+           │
+           ▼
+      NAD AVR (HDMI in)
+           │
+      NAD AVR (HDMI out)
+           │
+           ▼
+       Monitor 4
+        (HDMI)
 ```
 
-> [!IMPORTANT]
-> Use an **active** DisplayPort-to-HDMI adapter, not a passive one. Passive
-> adapters only work with dual-mode DisplayPort ("DP++") sources and may not
-> carry audio. Active adapters contain a conversion chip and are fully reliable
-> for this use case. NVIDIA recommends active adapters for DP-to-HDMI when
-> audio is needed. The RTX A4000 ships with one in the box.
+No adapters. No conversion. The native HDMI port carries video and audio
+directly to the AVR, which passes video through to the monitor and routes
+audio to your speakers.
 
 ---
 
