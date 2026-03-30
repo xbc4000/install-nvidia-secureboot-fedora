@@ -666,16 +666,19 @@ HDMI. One DP port needs an active adapter for the NAD AVR HDMI connection.
 **Cabling:**
 
 ```
-┌──────────────────────────────────────────────────┐
-│  GPU  [DP 1] [DP 2] [DP 3] [DP 4]               │
-└───│──────│──────│──────│──────────────────────┘
-    │      │      │      │
-    ▼      ▼      ▼      └──[Active DP→HDMI adapter]──►  NAD AVR (HDMI in)
-Monitor 1  Monitor 2  Monitor 3                                   │
-  (DP)       (DP)       (DP)                              NAD AVR (HDMI out)
-                                                                  │
-                                                              Monitor 4
-                                                               (HDMI)
+                            GPU
+┌────────────────────────────────────────────────────────┐
+│  [DP 1]    [DP 2]    [DP 3]    [DP 4]                  │
+└────│──────────│──────────│──────────│──────────────────┘
+     │          │          │          │
+     ▼          ▼          ▼          └──[Active DP→HDMI adapter]
+ Monitor 1  Monitor 2  Monitor 3               │
+  (DP 1)    (DP 2)      (DP 3)            NAD AVR (HDMI in)
+                                               │
+                                          NAD AVR (HDMI out)
+                                               │
+                                           Monitor 4
+                                            (HDMI)
 ```
 
 ---
@@ -689,22 +692,20 @@ directly to the NAD AVR — no adapter, no conversion.
 **Cabling:**
 
 ```
-┌──────────────────────────────────────────────┐
-│  GPU  [DP 1] [HDMI 2] [DP 3] [DP 4]          │
-└───│───────│────────│─────│──────────────────┘
-    │       │        │     │
-    ▼       │        ▼     ▼
-Monitor 1   │    Monitor 3  Monitor 4
-  (DP 1)    │     (DP 3)    (DP 4)
-            │
-            ▼
-       NAD AVR (HDMI in)
-            │
-       NAD AVR (HDMI out)
-            │
-            ▼
-        Monitor 2
-        (HDMI 2)
+                            GPU
+┌────────────────────────────────────────────────────────┐
+│  [DP 1]    [HDMI 2]    [DP 3]    [DP 4]                │
+└────│───────────│──────────│──────────│─────────────────┘
+     │           │          │          │
+     ▼           ▼          ▼          ▼
+ Monitor 1  NAD AVR     Monitor 3  Monitor 4
+  (DP 1)   (HDMI in)    (DP 3)     (DP 4)
+                │
+           NAD AVR (HDMI out)
+                │
+                ▼
+            Monitor 2
+             (HDMI)
 ```
 
 The native HDMI port carries video and audio directly to the AVR, which passes
