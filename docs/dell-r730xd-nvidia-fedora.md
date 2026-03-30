@@ -618,6 +618,33 @@ compute box.
 You need **3× DisplayPort + 1× HDMI** active simultaneously. Two GPU layouts
 can achieve this — pick the section that matches your card.
 
+> [!WARNING]
+> **R730xd black screen gotcha — read this before cabling anything.**
+>
+> When running an unsupported GPU on the R730xd, the BIOS has no GOP
+> (Graphics Output Protocol) driver for the card. The result depends entirely
+> on how your monitors are connected:
+>
+> | Connection type | Boot behaviour |
+> |----------------|---------------|
+> | DisplayPort → DisplayPort (DP-DP) | **Black screen** from power-on until the OS login manager loads |
+> | HDMI → HDMI | Video works from boot |
+> | DisplayPort → HDMI (active adapter) | Video works from boot |
+> | Mix of HDMI and DP→HDMI | Video works from boot on those outputs |
+>
+> The DP-only black screen is cosmetic — the system still boots normally,
+> you just can't see POST, BIOS, GRUB, or the kernel splash. If you need
+> to access BIOS or GRUB (e.g. for MOK enrollment during driver setup),
+> you must have at least one **HDMI connection** active — either native
+> HDMI from the GPU or a DP→HDMI adapter on one port.
+>
+> **The tradeoff:** HDMI has lower maximum bandwidth than DisplayPort 1.4.
+> On high-resolution monitors this forces a choice — a 4K monitor on HDMI 2.0
+> is limited to 4K@60Hz (vs 4K@120Hz+ on DP 1.4), and some very high
+> resolution panels may only be reachable at reduced refresh rates over HDMI.
+> If your monitor is 1440p or 1080p this is a non-issue. If it's 4K@120Hz+,
+> keep that monitor on DisplayPort and put a lower-res display on the HDMI port.
+
 ---
 
 ### Display Cabling — Option A: 4× DisplayPort GPU (adapter required)
@@ -1241,6 +1268,42 @@ If nothing appears:
 3. **Check embedded video:** Is it disabled? A conflicting embedded controller can prevent GPU init.
 4. **Reseat the card:** PCIe seating issues are common with heavy GPUs in 2U servers.
 5. **Check power:** Bus-powered GPU in a slot with insufficient power delivery? Try a different slot.
+
+### Black Screen from Power-On Until Login Manager (DP-Connected Monitors)
+
+This is **expected behaviour** on the R730xd with an unsupported GPU and
+DisplayPort-connected monitors. The BIOS has no GOP driver for the card so it
+produces no output over DP until the OS loads its own NVIDIA driver — at which
+point the login manager appears as normal.
+
+The fix is to have at least one **HDMI output active** during boot:
+- Native HDMI port on the GPU connected to any HDMI display, or
+- An active DP→HDMI adapter on one port connected to an HDMI display
+
+Once the BIOS detects an HDMI-connected display it outputs POST and GRUB there.
+Your DP monitors remain black until the OS loads, but you can at least see
+what's happening and interact with BIOS/GRUB/MOK enrollment when needed.
+
+> [!NOTE]
+> If all your monitors are DP-connected and you need to reach BIOS or GRUB
+> (for MOK enrollment, boot order changes, etc.), temporarily connect one
+> monitor via HDMI before rebooting. You can switch back to DP-only once
+> driver setup is complete — you just won't have pre-OS video on those screens.
+
+**HDMI bandwidth vs DisplayPort — resolution and refresh rate tradeoff:**
+
+HDMI 2.0 maxes out at 4K@60Hz. DisplayPort 1.4 can do 4K@120Hz+. If you have
+a high-refresh-rate 4K monitor, keep it on a DP port. Put lower-resolution or
+60Hz panels on the HDMI port to avoid hitting HDMI's bandwidth ceiling.
+
+| Monitor | Best connection |
+|---------|----------------|
+| 1080p or 1440p any refresh | Either — HDMI or DP both fine |
+| 4K@60Hz | Either — HDMI 2.0 handles this |
+| 4K@120Hz+ | DisplayPort only — HDMI 2.0 can't do it |
+| Ultrawide 3440×1440@144Hz+ | DisplayPort only |
+
+---
 
 ### No Video Output from GPU
 
