@@ -21,6 +21,7 @@ staring at a black screen wondering what went wrong.
 | Doc | What It Covers |
 |-----|---------------|
 | [install-nvidia-secureboot-fedora.md](docs/install-nvidia-secureboot-fedora.md) | Full install guide — all three methods, Secure Boot, verification, hardware acceleration, troubleshooting, FAQ |
+| [dell-r730xd-nvidia-fedora.md](docs/dell-r730xd-nvidia-fedora.md) | Dell PowerEdge R730xd — PERC H730 RAID6, PCIe slots, iDRAC fan fix, dual CPU requirement, server-specific BIOS, checklist |
 
 ---
 
@@ -226,5 +227,3 @@ sudo dnf remove akmod-nvidia akmod-nvidia-open xorg-x11-drv-nvidia\* nvidia-sett
   unless you configure DKMS — and even then, it's more fragile than akmod.
 - Dell/Lenovo/HP gaming laptops often ship with aggressive BIOS security
   defaults that break HDMI detection — Fast Boot and TPM are common culprits.
-
----
