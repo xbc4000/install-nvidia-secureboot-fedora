@@ -52,7 +52,8 @@ that will bite you if you don't know about them.
 - [NVIDIA Power Management on a Server](#nvidia-power-management-on-a-server)
 - [Daily Driver Setup — 4 Monitors + Gaming](#daily-driver-setup--4-monitors--gaming)
   - [GPU Selection for 4 Displays](#gpu-selection-for-4-displays)
-  - [Display Cabling — 3× DisplayPort + HDMI via NAD AVR](#display-cabling--3-displayport--hdmi-via-nad-avr)
+  - [Display Cabling — Option A: 4× DisplayPort GPU (adapter required)](#display-cabling--option-a-4-displayport-gpu-adapter-required)
+  - [Display Cabling — Option B: 3× DisplayPort + Native HDMI GPU (this build)](#display-cabling--option-b-3-displayport--native-hdmi-gpu-this-build)
   - [NAD AVR HDMI Chain — EDID and Resolution](#nad-avr-hdmi-chain--edid-and-resolution)
   - [NVIDIA as Primary GPU with No iGPU on Wayland](#nvidia-as-primary-gpu-with-no-igpu-on-wayland)
   - [4-Monitor Layout Configuration](#4-monitor-layout-configuration)
@@ -614,16 +615,44 @@ compute box.
 
 ### GPU Selection for 4 Displays
 
-This setup uses a GPU with **3× DisplayPort + 1× native HDMI** outputs,
-in physical port order **DP — HDMI — DP — DP** from left to right. The HDMI
-output goes directly to the NAD AVR — no adapter needed.
+You need **3× DisplayPort + 1× HDMI** active simultaneously. Two GPU layouts
+can achieve this — pick the section that matches your card.
 
 ---
 
-### Display Cabling — 3× DisplayPort + Native HDMI via NAD AVR
+### Display Cabling — Option A: 4× DisplayPort GPU (adapter required)
 
-The GPU has native HDMI — no adapter needed. Physical port order left to right:
-**DP — HDMI — DP — DP**.
+Cards like the RTX A4000, RTX A2000, or Quadro P4000 have 4× DP and no native
+HDMI. One DP port needs an active adapter for the NAD AVR HDMI connection.
+
+> [!IMPORTANT]
+> Use an **active** DisplayPort-to-HDMI 2.0 adapter, not a passive one. Passive
+> adapters may not carry audio and can have compatibility issues with AVRs.
+> Active adapters contain a conversion chip and are fully reliable for this use
+> case.
+
+**Cabling:**
+
+```
+┌──────────────────────────────────────────────────┐
+│  GPU  [DP 1] [DP 2] [DP 3] [DP 4]               │
+└───│──────│──────│──────│──────────────────────┘
+    │      │      │      │
+    ▼      ▼      ▼      └──[Active DP→HDMI adapter]──►  NAD AVR (HDMI in)
+Monitor 1  Monitor 2  Monitor 3                                   │
+  (DP)       (DP)       (DP)                              NAD AVR (HDMI out)
+                                                                  │
+                                                              Monitor 4
+                                                               (HDMI)
+```
+
+---
+
+### Display Cabling — Option B: 3× DisplayPort + Native HDMI GPU (this build)
+
+This build uses a GPU with **3× DisplayPort + 1× native HDMI**, in physical
+port order **DP — HDMI — DP — DP** left to right. The HDMI port goes directly
+to the NAD AVR — no adapter, no conversion.
 
 **Cabling:**
 
@@ -646,9 +675,8 @@ Monitor 1  │  Monitor 2  Monitor 3
         (HDMI)
 ```
 
-No adapters. No conversion. The native HDMI port carries video and audio
-directly to the AVR, which passes video through to the monitor and routes
-audio to your speakers.
+The native HDMI port carries video and audio directly to the AVR, which passes
+video through to the monitor and routes audio to your speakers.
 
 ---
 
