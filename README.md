@@ -226,3 +226,5 @@ sudo dnf remove akmod-nvidia akmod-nvidia-open xorg-x11-drv-nvidia\* nvidia-sett
   unless you configure DKMS — and even then, it's more fragile than akmod.
 - Dell/Lenovo/HP gaming laptops often ship with aggressive BIOS security
   defaults that break HDMI detection — Fast Boot and TPM are common culprits.
+
+---

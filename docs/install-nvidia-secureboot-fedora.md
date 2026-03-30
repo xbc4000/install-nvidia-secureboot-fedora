@@ -1,3 +1,9 @@
+> **Source:** This document is based on the original guide by LinuxCapable:
+> [How to Install NVIDIA Drivers on Fedora Linux](https://linuxcapable.com/how-to-install-nvidia-drivers-on-fedora-linux/)
+> — visit the original for screenshots and visual walkthroughs.
+
+---
+
 Install NVIDIA drivers on Fedora to unlock full GPU acceleration for gaming, video editing, Blender rendering, CUDA workloads, and machine learning. Fedora supports multiple installation paths with different trade-offs between convenience, driver freshness, and system integration.
 
 RPM Fusion is the recommended installation method for most Fedora users because it provides current drivers with automatic updates, Fedora integration, and Secure Boot support through akmods. Fedora’s default repositories do not ship the proprietary NVIDIA driver. As of February 23, 2026, NVIDIA does not publish a Fedora 43 CUDA repository, so Fedora 43 users should use RPM Fusion. Fedora 43 and newer also ship GNOME as Wayland-only; if you need an X11 session for legacy drivers or specific workflows, use a desktop that still offers X11 (for example KDE Plasma, XFCE, MATE, or Cinnamon). This guide covers RPM Fusion first, then the NVIDIA CUDA repository for older Fedora releases with supported CUDA repos, and finally the runfile method for edge cases.
