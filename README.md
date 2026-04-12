@@ -1,11 +1,33 @@
-# NVIDIA Drivers on Fedora + Secure Boot
+<p align="center">
+  <img src="https://img.shields.io/badge/Fedora-43-51A2DA?style=for-the-badge&logo=fedora&logoColor=white" />
+  <img src="https://img.shields.io/badge/NVIDIA-Driver-76B900?style=for-the-badge&logo=nvidia&logoColor=white" />
+  <img src="https://img.shields.io/badge/Secure_Boot-MOK-FF6600?style=for-the-badge&logoColor=white" />
+  <img src="https://img.shields.io/badge/RPM_Fusion-akmod-0078D4?style=for-the-badge&logoColor=white" />
+  <img src="https://img.shields.io/badge/Wayland-KMS-8B5CF6?style=for-the-badge&logoColor=white" />
+  <img src="https://img.shields.io/badge/CUDA-Ready-76B900?style=for-the-badge&logo=nvidia&logoColor=white" />
+</p>
 
-```
-╔══════════════════════════════════════════════════════════════════════╗
-║  Fedora  ·  RPM Fusion  ·  akmod  ·  Secure Boot MOK  ·  Wayland     ║
-║  Three install methods  ·  Full troubleshooting  ·  CUDA ready       ║
-╚══════════════════════════════════════════════════════════════════════╝
-```
+<p align="center">
+  <img src="https://img.shields.io/github/last-commit/xbc4000/install-nvidia-secureboot-fedora?style=flat-square&color=00B7FF" />
+  <img src="https://img.shields.io/github/repo-size/xbc4000/install-nvidia-secureboot-fedora?style=flat-square&color=00B7FF" />
+  <img src="https://img.shields.io/github/license/xbc4000/install-nvidia-secureboot-fedora?style=flat-square&color=00B7FF" />
+  <img src="https://img.shields.io/badge/Methods-3-00B7FF?style=flat-square" />
+  <img src="https://img.shields.io/badge/Troubleshooting-15+_scenarios-FF00B2?style=flat-square" />
+</p>
+
+<h1 align="center">NVIDIA + SECURE BOOT ON FEDORA</h1>
+
+<p align="center">
+  <strong>Complete guide to installing NVIDIA drivers on Fedora with Secure Boot enabled.</strong><br>
+  <strong>3 install methods · MOK enrollment · Wayland KMS · CUDA · 15+ troubleshooting scenarios</strong><br>
+  Includes a Dell PowerEdge R730xd server-specific supplement.
+</p>
+
+<p align="center">
+  <img src="social-preview.png" width="720" />
+</p>
+
+---
 
 Getting NVIDIA drivers working on Fedora is one of those tasks that
 looks simple, bites you in the face, and then suddenly clicks. This
